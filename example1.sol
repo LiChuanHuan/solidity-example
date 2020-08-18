@@ -7,6 +7,7 @@ contract Abb {
     
     
     constructor () public{
+        //msg.sender值接取得使用此合約的address
         myAddress = msg.sender;
     }
     
@@ -20,12 +21,14 @@ contract Abb {
         return myInt;
     }
     
-    
+    //支付貨幣至此合約
     function reciveMoney() public payable{
         
     }
     
+    //從此合約取款
     function withdrawlAllMoney() public {
+        //使用address中的transfer方法來發送貨幣
         msg.sender.transfer(address(this).balance);
     }
 }
