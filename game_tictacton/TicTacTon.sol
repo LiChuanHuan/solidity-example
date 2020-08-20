@@ -14,6 +14,8 @@ contract Event {
     }
     
     function joinGame() public{
+        //確認玩家2未被使用
+        assert(player2 == address(0));
         player2 = msg.sender;
     }
    
