@@ -24,10 +24,14 @@ contract TicTacTon {
     uint withdrawBalanceWithPlayer1;
     uint withdrawBalanceWithPlayer2;
 
+    uint timeToReact = 3 minutes;
+    uint gameVaildUntil;
+
     constructor () public payable{
         player1 = msg.sender;
         //msg.value是玩家轉進的錢
         require(msg.value == gameCost);
+        gameVaildUntil = now + timeToReact;
     }
     
     function joinGame() public payable{
@@ -44,8 +48,11 @@ contract TicTacTon {
         return board;
     }
 
+    //玩家下子
     function setStone(uint8 _x, uint8 _y) public {
         require(board[_x][_y] == address(0));
+        //避免玩家過久無回應
+        require(gameVaildUntil > now);
         require(activePlayer == msg.sender);
         assert(gameActive);
         assert(_x < 3);
@@ -54,6 +61,7 @@ contract TicTacTon {
 
         //下子數加1
         putStoneCounter++;
+        gameVaildUntil = now + timeToReact;
 
         if(checkResult(_x, _y)){
             return;
@@ -96,6 +104,13 @@ contract TicTacTon {
         }
     }
 
+    //玩家超時時，可以緊急將遊戲結束，雙房和局。
+    function emergecyCashOut() public {
+        require(gameVaildUntil < now);
+        require(gameActive);
+        setDraw();
+    }
+
     function setDraw() private{
         gameActive = false;
         emit GameOverWithDraw();
@@ -121,6 +136,8 @@ contract TicTacTon {
         }else{
             activePlayer = player1;
         }
+
+         gameVaildUntil = now + timeToReact;
         emit NextPlayer(activePlayer);
     }
 
