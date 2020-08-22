@@ -15,6 +15,8 @@ contract Event {
 
     event PlayerJoined(address player);
     event NextPlayer(address player);
+    event GameOverWithWin(address player);
+    event GameOverWithDraw(address player);
 
     constructor () public{
         player1 = msg.sender;
@@ -52,13 +54,13 @@ contract Event {
 
     function setWinner(address winner) private {
         gameActive = false;
-        // TODO 玩家勝利事件
+        GameOverWithWin(winner);
         // TODO 送錢給贏家
     }
 
     function setDraw() private{
          gameActive = false;
-        // TODO 玩家和局事件
+        GameOverWithDraw();
     }
 
     function changePlayer() private {
