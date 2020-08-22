@@ -54,13 +54,13 @@ contract Event {
 
     function setWinner(address winner) private {
         gameActive = false;
-        GameOverWithWin(winner);
+        emit GameOverWithWin(winner);
         // TODO 送錢給贏家
     }
 
     function setDraw() private{
-         gameActive = false;
-        GameOverWithDraw();
+        gameActive = false;
+        emit GameOverWithDraw();
     }
 
     function changePlayer() private {
