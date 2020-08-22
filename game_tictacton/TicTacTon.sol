@@ -99,6 +99,20 @@ contract TicTacTon {
     function setDraw() private{
         gameActive = false;
         emit GameOverWithDraw();
+
+        uint payoutBalance = address(this).balance/2;
+
+        if(!player1.send(payoutBalance)){
+            withdrawBalanceWithPlayer1 = payoutBalance;
+        }else{
+            emit PayoutSuccess(player1, payoutBalance);
+        }
+
+        if(!player2.send(payoutBalance)){
+            withdrawBalanceWithPlayer2 = payoutBalance;
+        }else{
+            emit PayoutSuccess(player2, payoutBalance);
+        }
     }
 
     function changePlayer() private {
