@@ -13,6 +13,9 @@ contract Event {
 
     uint8 public putStoneCounter = 0;
 
+    event PlayerJoined(address player);
+    event NextPlayer(address player);
+
     constructor () public{
         player1 = msg.sender;
     }
@@ -23,6 +26,7 @@ contract Event {
         gameActive = true;
         player2 = msg.sender;
         activePlayer = player2;
+        emit PlayerJoined(activePlayer);
     }
 
     function getBoard() view public returns(address[3][3] memory){
@@ -38,7 +42,7 @@ contract Event {
         board[_x][_y] = msg.sender;
 
         //下子數加1
-        putStoneTimes++;
+        putStoneCounter++;
 
         if(checkResult(_x, _y)){
             return;
@@ -63,12 +67,13 @@ contract Event {
         }else{
             activePlayer = player1;
         }
+        emit NextPlayer(activePlayer);
     }
 
 
     //檢查結果
     //有結果回傳 True，沒結果回傳 false
-    function checkResult(uint8 _x, uint8 _y) private view returns (bool){
+    function checkResult(uint8 _x, uint8 _y) private returns (bool){
         //檢查列
         for(uint8 i = 0; i < boardSize; i++){
             if(board[i][_y] != activePlayer){
