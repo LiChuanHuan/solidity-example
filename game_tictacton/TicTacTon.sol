@@ -1,31 +1,40 @@
 pragma solidity >=0.4.22 <0.7.0;
 
-contract Event {
+contract TicTacTon {
    
+    uint constant public gameCost = 0.1 ether;
+
     uint8 public boardSize = 3;
     bool gameActive;
 
     address[3][3] board;
 
-    address public player1;
-    address public player2;
-    address activePlayer;
+    address payable public player1;
+    address payable public player2;
+    address payable activePlayer;
 
     uint8 public putStoneCounter = 0;
 
     event PlayerJoined(address player);
     event NextPlayer(address player);
     event GameOverWithWin(address player);
-    event GameOverWithDraw(address player);
+    event GameOverWithDraw();
+    event PayoutSuccess(address player, uint balance);
 
-    constructor () public{
+    uint withdrawBalanceWithPlayer1;
+    uint withdrawBalanceWithPlayer2;
+
+    constructor () public payable{
         player1 = msg.sender;
+        //msg.value是玩家轉進的錢
+        require(msg.value == gameCost);
     }
     
-    function joinGame() public{
+    function joinGame() public payable{
         //確認玩家2未被使用
         assert(player2 == address(0));
         gameActive = true;
+        require(msg.value == gameCost);
         player2 = msg.sender;
         activePlayer = player2;
         emit PlayerJoined(activePlayer);
@@ -52,10 +61,39 @@ contract Event {
         changePlayer();
     }
 
-    function setWinner(address winner) private {
+    function setWinner(address payable winner) private {
         gameActive = false;
         emit GameOverWithWin(winner);
-        // TODO 送錢給贏家
+        //send函數會返回送錢的結果(最多使用21000gas)
+        //成功為TRUE
+        //失敗為FALSE
+        //而transfer函數(可用所有的gas)不會返回結果，假如傳送失敗，它會回滾到這一次改變狀態的初始狀態(相當於是最後一子尚未下的狀態。)。
+        //並丟出異常
+        if(!winner.send(address(this).balance)){
+            //建立一個機制讓玩家可以取回交易失敗的錢。
+            if(winner == player1){
+                withdrawBalanceWithPlayer1 = address(this).balance;
+            }else{
+                withdrawBalanceWithPlayer2 = address(this).balance;
+            }
+        }else{
+            emit PayoutSuccess(winner, address(this).balance);
+        }
+    }
+
+    //讓玩家可以有機會取回發送失敗的錢
+    function wihdrawIn() public {
+        if(msg.sender == player1){
+            require(withdrawBalanceWithPlayer1 > 0);
+            withdrawBalanceWithPlayer1 = 0;
+            player1.transfer(withdrawBalanceWithPlayer1);
+            emit PayoutSuccess(player1, withdrawBalanceWithPlayer1);
+        }else{
+            require(withdrawBalanceWithPlayer2 > 0);
+            withdrawBalanceWithPlayer2 = 0;
+            player2.transfer(withdrawBalanceWithPlayer2);
+            emit PayoutSuccess(player2, withdrawBalanceWithPlayer2);
+        }
     }
 
     function setDraw() private{
